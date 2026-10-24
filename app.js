@@ -5,8 +5,9 @@ import { sendImage } from './modules/images.js';
 import { messagesRef } from './modules/firebase.js';
 import { remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { showImageModal } from './modules/modal.js';
-import { startTyping, stopTyping, listenTypingStatus, markAsRead } from './modules/status.js';
+import { startTyping, stopTyping, listenTypingStatus, markAsRead, setOnline, setOffline, listenPresence } from './modules/status.js';
 import { initImageViewer } from './modules/viewer.js';
+
 
 // Элементы интерфейса
 const loginScreen = document.getElementById('loginScreen');
@@ -24,15 +25,18 @@ function showChat() {
   chatScreen.classList.remove('hidden');
   logoutBtn.classList.remove('hidden');
   messageInput.focus();
+  setOnline(); // помечаем себя онлайн
 }
 
 function showLogin() {
+  setOffline(); // помечаем себя оффлайн при выходе
   chatScreen.classList.add('hidden');
   loginScreen.classList.remove('hidden');
   logoutBtn.classList.add('hidden');
   nameInput.value = "";
   nameInput.focus();
 }
+
 
 messageInput.addEventListener('input', () => {
   startTyping();
@@ -122,4 +126,10 @@ initImageViewer();
 initAuth(showChat, showLogin);
 listenForMessages();
 listenTypingStatus();
+listenPresence();
 markAsRead();
+
+// Если вкладку закрывают — тоже ставим оффлайн (дополнительно к onDisconnect)
+window.addEventListener('beforeunload', () => {
+  setOffline();
+});

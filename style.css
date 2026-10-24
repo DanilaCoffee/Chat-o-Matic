@@ -168,12 +168,38 @@ h1 {
   border-bottom: 1px solid var(--border-color);
 }
 
+.status-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 #status-indicator {
   font-size: 0.8rem;
   color: var(--text-muted);
+  font-weight: 600;
 }
 
-#status-indicator.connected { color: #4caf50; }
+#status-indicator.connected {
+  color: #4caf50;
+}
+
+#status-indicator.offline {
+  color: #f44336;
+}
+
+.online-users {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.online-users.hidden {
+  display: none;
+}
 
 /* --- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ --- */
 .theme-switch-wrapper {

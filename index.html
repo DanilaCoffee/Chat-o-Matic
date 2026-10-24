@@ -46,7 +46,10 @@
     <!-- Экран чата -->
     <div id="chatScreen" class="screen hidden">
       <div class="chat-header">
-        <span id="status-indicator">Подключение...</span>
+        <div class="status-block">
+          <span id="status-indicator">Подключение...</span>
+          <span id="online-users" class="online-users hidden"></span>
+        </div>
         <div class="theme-switch-wrapper">
           <span id="themeLabel">Светлая тема</span>
           <label class="theme-switch" for="themeToggleBtn">
