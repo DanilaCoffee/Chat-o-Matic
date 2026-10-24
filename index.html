@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat-o-Matic 3000</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Шапка сайта -->
+  <header class="site-header">
+    <div class="logo-container">
+      <!-- Забавный SVG логотип (робот) -->
+      <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="45" fill="url(#grad1)" />
+        <rect x="30" y="40" width="40" height="30" rx="5" fill="#fff" />
+        <circle cx="40" cy="55" r="5" fill="#333" />
+        <circle cx="60" cy="55" r="5" fill="#333" />
+        <path d="M40 65 Q50 70 60 65" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <line x1="50" y1="40" x2="50" y2="25" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="20" r="5" fill="#ff4081" />
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#80d0ff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#ff80ab;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1>Chat-o-Matic 3000</h1>
+    </div>
+    <button id="logoutBtn" class="hidden">Выйти</button>
+  </header>
+
+  <!-- Основной контент -->
+  <main class="main-content">
+    
+    <!-- Экран входа -->
+    <div id="loginScreen" class="screen">
+      <div class="login-box">
+        <h2>Как тебя зовут, путник?</h2>
+        <input type="text" id="nameInput" placeholder="Твое имя..." autocomplete="off">
+        <button id="enterBtn">Войти в чат</button>
+      </div>
+    </div>
+
+    <!-- Экран чата -->
+    <div id="chatScreen" class="screen hidden">
+      <div class="chat-header">
+        <span id="status-indicator">Подключение...</span>
+        <div class="theme-switch-wrapper">
+          <span id="themeLabel">Светлая тема</span>
+          <label class="theme-switch" for="themeToggleBtn">
+            <input type="checkbox" id="themeToggleBtn">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div id="messages"></div>
+       <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--accent); padding: 0 20px; font-weight: bold; opacity: 0.8;"></div>
+      
+      <div class="input-area">
+        <!-- Скрытый инпут для выбора файла -->
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <!-- Кнопка для прикрепления -->
+        <button id="attachBtn" title="Прикрепить картинку" style="background: var(--border-color); color: var(--text-main); padding-left: 0;">📎</button>
+        
+        <input type="text" id="messageInput" placeholder="Напиши что-нибудь..." autocomplete="off">
+        <button id="sendBtn">➤</button>
+      </div>
+    </div>
+
+    <div id="imageModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3>Отправить это изображение?</h3>
+      <div class="preview-container">
+        <img id="previewImage" src="" alt="Превью">
+      </div>
+      <div class="modal-actions">
+        <button id="cancelImageBtn" class="btn-secondary">Отмена</button>
+        <button id="confirmImageBtn" class="btn-primary">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="imageViewer" class="image-viewer hidden">
+    <img id="viewerImage" src="" alt="Просмотр">
+  </div>
+
+  </main>
+
+  <!-- Подвал -->
+  <footer class="site-footer">
+    <p>Сделано с любовью к <span style="color: #ff4081;">P2P</span> (который на самом деле Firebase) © 2026</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
