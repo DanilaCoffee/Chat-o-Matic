@@ -1,0 +1,508 @@
+:root {
+  /* Светлая тема (по умолчанию) */
+  --bg-color: #f0f4f8;
+  --panel-bg: #ffffff;
+  --text-main: #333333;
+  --text-muted: #888888;
+  --accent: #ff4081;
+  --accent-hover: #e91e63;
+  --blue-accent: #80d0ff;
+  --border-color: #e0e0e0;
+  --msg-bg-other: #e9ecef;
+  --msg-bg-mine: linear-gradient(135deg, #80d0ff, #4facfe);
+}
+
+[data-theme="dark"] {
+  /* Темная тема */
+  --bg-color: #121212;
+  --panel-bg: #1e1e1e;
+  --text-main: #f0f0f0;
+  --text-muted: #888888;
+  --accent: #ff80ab;
+  --accent-hover: #ff4081;
+  --blue-accent: #4facfe;
+  --border-color: #333333;
+  --msg-bg-other: #2a2a2a;
+  --msg-bg-mine: linear-gradient(135deg, #ff80ab, #ff4081);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Фоллбэк для старых браузеров */
+  height: 100svh; /* Идеальная высота для мобильных (без учета адресной строки) */
+  overflow: hidden; /* Запрещаем скроллить всю страницу целиком */
+  transition: background-color 0.3s, color 0.3s;
+}
+/* ШАПКА */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--panel-bg);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo { width: 40px; height: 40px; }
+
+h1 {
+  font-size: 1.2rem;
+  color: var(--text-main);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+#logoutBtn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 5px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+#logoutBtn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ОСНОВНОЙ КОНТЕНТ */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.hidden { display: none !important; }
+
+/* ЭКРАН ВХОДА */
+#loginScreen {
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top right, var(--blue-accent) 0%, transparent 40%),
+              radial-gradient(circle at bottom left, var(--accent) 0%, transparent 40%);
+}
+
+.login-box {
+  background: var(--panel-bg);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-box h2 { font-size: 1.5rem; }
+
+.login-box input {
+  padding: 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-main);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.login-box input:focus { border-color: var(--accent); }
+
+.login-box button {
+  padding: 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.login-box button:hover { background: var(--accent-hover); }
+
+/* ЭКРАН ЧАТА */
+#chatScreen {
+  background: var(--bg-color);
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+#status-indicator {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+#status-indicator.connected { color: #4caf50; }
+
+/* --- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ --- */
+.theme-switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+/* Скрываем стандартный чекбокс */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Ползунок (фон) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+/* Кружочек */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Состояние "включено" (темная тема) */
+input:checked + .slider {
+  background-color: var(--accent);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+/* СООБЩЕНИЯ */
+#messages {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background: var(--bg-color);
+  /* Паттерн на фоне для красоты */
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.message {
+  background: var(--msg-bg-other);
+  padding: 10px 15px;
+  border-radius: 15px 15px 15px 0;
+  max-width: 75%;
+  align-self: flex-start;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  animation: popIn 0.3s ease-out;
+}
+
+.message.my-message {
+  background: var(--msg-bg-mine);
+  color: #fff;
+  align-self: flex-end;
+  border-radius: 15px 15px 0 15px;
+}
+
+.message .sender {
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  display: block;
+  opacity: 0.8;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ПОЛЕ ВВОДА */
+.input-area {
+  display: flex;
+  padding: 15px;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border-color);
+  gap: 10px;
+}
+
+.input-area input {
+  flex-grow: 1;
+  padding: 12px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 25px;
+  background: var(--bg-color);
+  color: var(--text-main);
+  outline: none;
+}
+
+.input-area input:focus { border-color: var(--accent); }
+
+.input-area button {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: 4px; /* Центровка иконки отправки */
+  transition: background 0.2s;
+}
+
+.input-area button:hover { background: var(--accent-hover); }
+
+/* ПОДВАЛ */
+.site-footer {
+  text-align: center;
+  padding: 10px;
+  background: var(--panel-bg);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* МОБИЛЬНАЯ АДАПТАЦИЯ */
+@media (max-width: 600px) {
+  .site-header h1 { font-size: 1rem; }
+  .message { max-width: 85%; }
+  .login-box { padding: 20px; }
+  
+  /* 1. Скрываем футер на телефонах */
+  .site-footer {
+    display: none;
+  }
+
+  /* 2. Уменьшаем отступы для сообщений с картинками на телефоне */
+  .message img {
+    margin: 0;
+    border-radius: 4px; /* Чуть меньше скругление на мобилках */
+  }
+  
+  /* Находим сообщение, внутри которого есть картинка, и уменьшаем его padding */
+  .message:has(img) {
+    padding: 4px; /* Минимальный отступ вокруг картинки */
+  }
+  
+  /* Оставляем небольшой отступ для имени отправителя */
+  .message:has(img) .sender {
+    padding: 4px 8px 0 8px;
+  }
+}
+
+/* Стили для картинок в сообщениях */
+.message img {
+  max-width: 100%;       /* Не вылезаем за пределы сообщения */
+  max-height: 350px;     /* 3. Ограничиваем высоту, чтобы картинка не занимала весь экран */
+  width: auto;           /* Сохраняем пропорции */
+  object-fit: contain;   /* Вписываем картинку в эти рамки без обрезки */
+  border-radius: 8px;
+  margin-top: 5px;
+  cursor: pointer;
+  display: block;
+}
+
+/* Немного поправим кнопку прикрепления */
+#attachBtn {
+  font-size: 1.2rem;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+#attachBtn:hover {
+  opacity: 0.8;
+}
+
+/* Стили для модального окна картинки */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.modal-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-content {
+  background: var(--panel-bg);
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transform: scale(1);
+  transition: transform 0.3s;
+}
+
+.modal-overlay.hidden .modal-content {
+  transform: scale(0.9);
+}
+
+.preview-container {
+  margin: 15px 0;
+  max-height: 300px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--bg-color);
+  display: flex;
+  justify-content: center;
+}
+
+#previewImage {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+.btn-secondary:hover { background: var(--border-color); }
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+/* Стили для просмотра картинки на весь экран */
+.image-viewer {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85); /* Сильное затемнение */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Выше, чем окно подтверждения отправки */
+  cursor: zoom-out; /* Курсор в виде лупы с минусом */
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.image-viewer.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#viewerImage {
+  max-width: 95%;  /* Оставляем небольшие отступы по краям */
+  max-height: 95vh; /* Вписываем в высоту экрана */
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  object-fit: contain;
+}
+
+/* Стили для времени и статуса под сообщением */
+.message-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.my-message .message-meta {
+  color: #fff; /* В своих сообщениях (синих) текст белый */
+}
+
+.msg-time {
+  /* Время чуть светлее статуса */
+  opacity: 0.8; 
+}
