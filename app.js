@@ -1,6 +1,6 @@
 import { initTheme, toggleTheme, displayMessage } from './modules/ui.js';
 import { initAuth, loginUser, logoutUser, currentUser } from './modules/auth.js';
-import { listenForMessages, sendTextMessage } from './modules/chat.js';
+import { listenForMessages, sendTextMessage, updateTextMessage } from './modules/chat.js';
 import { sendImage } from './modules/images.js';
 import { messagesRef } from './modules/firebase.js';
 import { remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -41,6 +41,8 @@ function showChat() {
 }
 
 function showLogin() {
+  clearReply();
+  clearEdit();
   chatScreen.classList.add('hidden');
   loginScreen.classList.remove('hidden');
   logoutBtn.classList.add('hidden');
@@ -60,27 +62,64 @@ function showLogin() {
 }
 
 let replyTarget = null;
-messageInput.addEventListener('input', () => startTyping());
-function sendCurrentMessage() {
+let editingTarget = null;
+messageInput.addEventListener('input', () => { if (!editingTarget) startTyping(); });
+
+async function sendCurrentMessage() {
   const text = messageInput.value.trim();
+  if (editingTarget) {
+    if (!text && !editingTarget.image) return;
+    const saved = await updateTextMessage(editingTarget.id, text);
+    if (saved) {
+      messageInput.value = '';
+      clearEdit();
+    }
+    return;
+  }
   if (!text) return;
   stopTyping();
   sendTextMessage(text, replyTarget);
   messageInput.value = '';
   clearReply();
 }
+
+function clearEdit() {
+  editingTarget = null;
+  document.getElementById('editingBar').classList.add('hidden');
+  document.getElementById('editingText').textContent = 'Редактирование сообщения';
+  messageInput.value = '';
+  messageInput.placeholder = 'Напиши что-нибудь...';
+  sendBtn.textContent = '➤';
+  const attachButton = document.getElementById('attachBtn');
+  if (attachButton) attachButton.disabled = false;
+}
+
 function clearReply() {
   replyTarget = null;
   document.getElementById('replyingBar').classList.add('hidden');
   document.getElementById('replyingText').textContent = '';
 }
 document.addEventListener('chat:reply', (event) => {
+  clearEdit();
   replyTarget = event.detail;
   document.getElementById('replyingText').textContent = `Ответ на ${replyTarget.name}: ${(replyTarget.text || (replyTarget.image ? '📷 Изображение' : '')).slice(0, 100)}`;
   document.getElementById('replyingBar').classList.remove('hidden');
   messageInput.focus();
 });
 document.getElementById('cancelReplyBtn').addEventListener('click', clearReply);
+document.addEventListener('chat:edit', (event) => {
+  clearReply();
+  const target = event.detail;
+  editingTarget = target;
+  document.getElementById('editingText').textContent = `Редактирование сообщения: ${(target.text || (target.image ? '📷 подпись к изображению' : '')).slice(0, 90)}`;
+  document.getElementById('editingBar').classList.remove('hidden');
+  messageInput.value = target.text || '';
+  messageInput.placeholder = 'Измени сообщение...';
+  sendBtn.textContent = '✓';
+  document.getElementById('attachBtn').disabled = true;
+  messageInput.focus();
+});
+document.getElementById('cancelEditBtn').addEventListener('click', clearEdit);
 sendBtn.addEventListener('click', sendCurrentMessage);
 messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendCurrentMessage(); } });
 // Если пользователь начинает печатать вне поля, переводим фокус в текстбокс.

@@ -54,17 +54,11 @@
         <div class="chat-tools">
           <button id="settingsBtn" class="settings-btn" type="button" title="Настройки">⚙ Настройки</button>
         </div>
-        <div class="theme-switch-wrapper">
-          <span id="themeLabel">Темная тема</span>
-          <label class="theme-switch" for="themeToggleBtn">
-            <input type="checkbox" id="themeToggleBtn">
-            <span class="slider round"></span>
-          </label>
-        </div>
       </div>
       
       <div id="messages"></div>
        <div id="replyingBar" class="replying-bar hidden"><span id="replyingText"></span><button id="cancelReplyBtn" type="button" aria-label="Отменить ответ">✕</button></div>
+       <div id="editingBar" class="replying-bar editing-bar hidden"><span id="editingText">Редактирование сообщения</span><button id="cancelEditBtn" type="button" aria-label="Отменить редактирование">✕</button></div>
       <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--accent); padding: 0 20px; font-weight: bold; opacity: 0.8;"></div>
       
       <div class="input-area">
@@ -81,6 +75,13 @@
     <div id="settingsModal" class="modal-overlay hidden">
     <div class="modal-content settings-content">
       <h3>Настройки чата</h3>
+      <div class="theme-setting-row">
+        <span>Тёмная тема</span>
+        <label class="theme-switch" for="themeToggleBtn" aria-label="Включить тёмную тему">
+          <input type="checkbox" id="themeToggleBtn">
+          <span class="slider round"></span>
+        </label>
+      </div>
       <label for="soundVolume">Громкость звука <span id="soundVolumeValue">60%</span></label>
       <input id="soundVolume" type="range" min="0" max="100" value="60">
       <label for="timeFormat">Формат времени</label>

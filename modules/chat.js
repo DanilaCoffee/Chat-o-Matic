@@ -1,5 +1,5 @@
 import { db, messagesRef } from './firebase.js';
-import { push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp, off, query, orderByKey, limitToLast, endAt, get, ref } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp, query, orderByKey, limitToLast, endAt, get, ref, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { displayMessage, updateMessageStatus } from './ui.js';
 import { showNotification } from './notifications.js';
 
@@ -17,7 +17,7 @@ function renderSnapshot(snapshot, prepend = false) {
   const id = snapshot.key;
   if (!data || loadedIds.has(id)) return;
   loadedIds.add(id);
-  displayMessage(data.name, data.text || "", data.image || null, activeUser, data.read || false, id, data.timestamp, data.replyTo || null, prepend);
+  displayMessage(data.name, data.text || "", data.image || null, activeUser, data.read || false, id, data.timestamp, data.replyTo || null, prepend, data.edited || false);
   if (!oldestLoadedKey || id < oldestLoadedKey) oldestLoadedKey = id;
 }
 
@@ -42,24 +42,29 @@ export function listenForMessages(user) {
       showNotification(data.name, data.text, !!data.image);
     }
   });
-  const unsubChanged = onChildChanged(liveQuery, (snapshot) => {
+  // Слушаем изменения во всей ветке, чтобы обновлялись и уже загруженные старые сообщения.
+  const unsubChanged = onChildChanged(messagesRef, (snapshot) => {
     const data = snapshot.val();
+    if (!data || !loadedIds.has(snapshot.key)) return;
+    displayMessage(data.name, data.text || "", data.image || null, activeUser, data.read || false, snapshot.key, data.timestamp, data.replyTo || null, false, data.edited || false);
     if (data.name === user) updateMessageStatus(snapshot.key, data.read);
   });
-  const unsubRemoved = onChildRemoved(liveQuery, (snapshot) => {
-    // Firebase удаляет элемент из ограниченного запроса и когда он просто выпадает из последних 20.
-    // Поэтому удаляем из DOM только если запись действительно отсутствует в базе.
-    get(ref(db, `messages/${snapshot.key}`)).then((check) => {
-      if (!check.exists()) {
-        const el = document.querySelector(`.message[data-id="${snapshot.key}"]`);
-        if (el) el.remove();
-        loadedIds.delete(snapshot.key);
-      }
-    });
+  // Ветка без лимита сообщает только о реальном удалении, включая старые загруженные сообщения.
+  const unsubRemoved = onChildRemoved(messagesRef, (snapshot) => {
+    const id = snapshot.key;
+    const element = Array.from(document.querySelectorAll('#messages .message')).find(item => item.dataset.id === id);
+    if (element) element.remove();
+    loadedIds.delete(id);
+    if (oldestLoadedKey === id) {
+      const firstLoaded = document.querySelector('#messages .message');
+      oldestLoadedKey = firstLoaded ? firstLoaded.dataset.id : null;
+    }
   });
   messagesDiv.onscroll = () => { if (messagesDiv.scrollTop < 80) loadOlderMessages(); };
   return () => {
-    off(liveQuery, 'child_added', unsubAdded); off(liveQuery, 'child_changed', unsubChanged); off(liveQuery, 'child_removed', unsubRemoved);
+    unsubAdded();
+    unsubChanged();
+    unsubRemoved();
     messagesDiv.onscroll = null;
     activeUser = null;
   };
@@ -92,4 +97,35 @@ export async function sendTextMessage(text, replyTo = null) {
     if (replyTo) payload.replyTo = replyTo;
     await push(messagesRef, payload);
   } catch (error) { console.error('Ошибка отправки:', error); }
+}
+
+
+export async function updateTextMessage(messageId, text) {
+  const currentUser = localStorage.getItem('chat_user_name');
+  if (!messageId || !currentUser) return false;
+
+  const cleanText = (text || '').trim();
+  try {
+    const messageRef = ref(db, `messages/${messageId}`);
+    const snapshot = await get(messageRef);
+    if (!snapshot.exists()) {
+      alert('Это сообщение уже удалено.');
+      return false;
+    }
+    if (snapshot.val().name !== currentUser) {
+      alert('Можно изменять только собственные сообщения.');
+      return false;
+    }
+
+    await update(messageRef, {
+      text: cleanText,
+      edited: true,
+      editedAt: serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error('Ошибка изменения сообщения:', error);
+    alert('Не удалось изменить сообщение. Проверь подключение к Firebase.');
+    return false;
+  }
 }
