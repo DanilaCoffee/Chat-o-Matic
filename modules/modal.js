@@ -4,30 +4,40 @@ export function showImageModal(file, onConfirm) {
   const previewImg = document.getElementById('previewImage');
   const confirmBtn = document.getElementById('confirmImageBtn');
   const cancelBtn = document.getElementById('cancelImageBtn');
+  const captionInput = document.getElementById('imageCaptionInput'); // Новое поле
 
   // Создаем временную ссылку для предпросмотра
   const objectUrl = URL.createObjectURL(file);
   previewImg.src = objectUrl;
 
-  // Показываем окно
+  // Показываем окно и фокусируемся на поле ввода текста
   modal.classList.remove('hidden');
+  captionInput.focus();
 
-  // Функция очистки (освобождает память)
+  // Функция очистки
   const cleanup = () => {
     modal.classList.add('hidden');
-    URL.revokeObjectURL(objectUrl); // Освобождаем память
+    URL.revokeObjectURL(objectUrl);
     confirmBtn.onclick = null;
     cancelBtn.onclick = null;
+    captionInput.value = ''; // Очищаем поле при закрытии
   };
 
   // Обработчик кнопки "Отправить"
-  confirmBtn.onclick = () => {
+  const handleConfirm = () => {
+    const caption = captionInput.value.trim();
     cleanup();
-    onConfirm(file); // Вызываем переданную функцию отправки
+    onConfirm(file, caption); // Передаем и файл, и текст
   };
 
-  // Обработчик кнопки "Отмена"
-  cancelBtn.onclick = () => {
-    cleanup();
+  confirmBtn.onclick = handleConfirm;
+  cancelBtn.onclick = cleanup;
+
+  // Отправка по Enter
+  captionInput.onkeypress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleConfirm();
+    }
   };
 }

@@ -129,40 +129,51 @@ fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   
   if (file) {
-    // Вызываем модальное окно. Если пользователь нажмет "Отправить",
-    // сработает коллбэк, который передаст файл в sendImage
-    showImageModal(file, (confirmedFile) => {
-      sendImage(confirmedFile);
+    // Забираем текст из основного поля ввода
+    const existingText = messageInput.value.trim();
+    
+    // Открываем модальное окно и передаем туда текст
+    showImageModal(file, (confirmedFile, caption) => {
+      // Если пользователь подтвердил, отправляем картинку с подписью
+      sendImage(confirmedFile, caption);
+      
+      // Очищаем основное поле ввода, так как текст уже ушел с картинкой
+      messageInput.value = '';
     });
+    
+    // Передаем текст в модальное окно ПОСЛЕ его открытия
+    // (модальное окно открывается мгновенно, поэтому мы просто заполняем поле)
+    setTimeout(() => {
+      document.getElementById('imageCaptionInput').value = existingText;
+    }, 0);
   }
   
-  // Очищаем инпут
   fileInput.value = '';
 });
 
 document.addEventListener('paste', (event) => {
-  // Проверяем, что пользователь находится в чате (авторизован)
   const isChatVisible = !document.getElementById('chatScreen').classList.contains('hidden');
   if (!isChatVisible) return;
 
-  // Получаем элементы из буфера обмена
   const items = (event.clipboardData || window.clipboardData).items;
   
   for (let index in items) {
     const item = items[index];
-    
-    // Ищем элементы типа "картинка"
     if (item.kind === 'file' && item.type.startsWith('image/')) {
       const file = item.getAsFile();
-      
-      // Если файл найден — открываем наше модальное окно для подтверждения
       if (file) {
-        showImageModal(file, (confirmedFile) => {
-          sendImage(confirmedFile);
+        const existingText = messageInput.value.trim(); // <-- Берем текст
+        
+        showImageModal(file, (confirmedFile, caption) => {
+          sendImage(confirmedFile, caption);
+          messageInput.value = ''; // <-- Очищаем
         });
+        
+        // Вставляем текст в модальное окно
+        setTimeout(() => {
+          document.getElementById('imageCaptionInput').value = existingText;
+        }, 0);
       }
-      
-      // Предотвращаем стандартное поведение (например, вставку текста в input)
       event.preventDefault();
       break; 
     }

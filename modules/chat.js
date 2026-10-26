@@ -1,5 +1,5 @@
 import { messagesRef } from './firebase.js';
-import { push, onChildAdded, onChildChanged, serverTimestamp, off } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp, off } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { displayMessage, updateMessageStatus } from './ui.js';
 import { showNotification } from './notifications.js';
 
@@ -32,9 +32,18 @@ export function listenForMessages(user) {
     }
   });
 
+  const unsubRemoved = onChildRemoved(messagesRef, (snapshot) => {
+    const messageId = snapshot.key;
+    const messageEl = document.querySelector(`.message[data-id="${messageId}"]`);
+    if (messageEl) {
+      messageEl.remove(); // Удаляем из DOM
+    }
+  });
+
   return () => {
     off(messagesRef, 'child_added', unsubAdded);
     off(messagesRef, 'child_changed', unsubChanged);
+    off(messagesRef, 'child_removed', unsubRemoved); // Добавляем отписку
   };
 }
 export async function sendTextMessage(text) {

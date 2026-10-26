@@ -250,10 +250,14 @@ input:checked + .slider:before {
   background: var(--msg-bg-other);
   padding: 10px 15px;
   border-radius: 15px 15px 15px 0;
-  max-width: 75%;
+  max-width: 75%; /* Ограничиваем ширину пузыря */
   align-self: flex-start;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   animation: popIn 0.3s ease-out;
+  
+  /* 1. Лечим длинные слова и ссылки */
+  word-break: break-word; 
+  overflow-wrap: anywhere;
 }
 
 .message.my-message {
@@ -269,6 +273,7 @@ input:checked + .slider:before {
   margin-bottom: 4px;
   display: block;
   opacity: 0.8;
+  pointer-events: none;
 }
 
 @keyframes popIn {
@@ -355,14 +360,26 @@ input:checked + .slider:before {
 
 /* Стили для картинок в сообщениях */
 .message img {
-  max-width: 100%;       /* Не вылезаем за пределы сообщения */
-  max-height: 350px;     /* 3. Ограничиваем высоту, чтобы картинка не занимала весь экран */
-  width: auto;           /* Сохраняем пропорции */
-  object-fit: contain;   /* Вписываем картинку в эти рамки без обрезки */
+  max-width: 100%;
+  max-height: 350px;
+  width: auto;           
+  object-fit: contain;   
   border-radius: 8px;
   margin-top: 5px;
   cursor: pointer;
   display: block;
+}
+
+.message:has(img) {
+  /* Если в сообщении есть картинка, делаем ширину контейнера по содержимому (картинке) */
+  width: fit-content; 
+}
+
+.message:has(img) span:not(.sender):not(.msg-time):not(.msg-status) {
+  /* Текст под картинкой не должен быть шире самой картинки */
+  display: block;
+  max-width: 100%; 
+  word-break: break-word;
 }
 
 /* Немного поправим кнопку прикрепления */
@@ -506,3 +523,85 @@ input:checked + .slider:before {
   /* Время чуть светлее статуса */
   opacity: 0.8; 
 }
+
+.message img + span {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Делаем сообщение относительным, чтобы позиционировать кнопку */
+.message {
+  position: relative; 
+}
+
+/* Кнопка удаления */
+.delete-btn {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  z-index: 10;
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  color: var(--text-main);
+  opacity: 0.5;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: lowercase;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: opacity 0.2s, background 0.2s;
+  display: none; /* Скрыта по умолчанию */
+}
+
+.my-message .delete-btn {
+  color: #fff; /* В синих сообщениях текст белый */
+}
+
+.message:hover .delete-btn {
+  display: block; /* Показываем при наведении */
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  background: rgba(0,0,0,0.1);
+}
+
+.my-message .delete-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Окошко подтверждения */
+.delete-confirm-box {
+  position: absolute;
+  top: 25px;
+  right: 8px;
+  z-index: 20;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  z-index: 10;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.delete-confirm-box.hidden {
+  display: none;
+}
+
+.delete-confirm-box button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 2px;
+}
+
+.confirm-yes { color: #e53935; } /* Красный для "Да" */
+.confirm-no { color: var(--text-muted); }

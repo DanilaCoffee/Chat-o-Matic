@@ -1,7 +1,7 @@
 import { messagesRef } from './firebase.js';
 import { push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-// Функция для сжатия картинки
+// Функция для сжатия картинки (остается без изменений)
 function compressImage(file, maxWidth = 800, quality = 0.6) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -33,11 +33,9 @@ function compressImage(file, maxWidth = 800, quality = 0.6) {
   });
 }
 
-// Отправка картинки
-export async function sendImage(file) {
-  // Берем имя напрямую из localStorage (как мы сделали для текста)
+// Обновленная функция отправки
+export async function sendImage(file, captionText = "") {
   const currentUser = localStorage.getItem('chat_user_name');
-  
   if (!file || !currentUser) return;
 
   const statusIndicator = document.getElementById('status-indicator');
@@ -52,6 +50,7 @@ export async function sendImage(file) {
     await push(messagesRef, {
       name: currentUser,
       image: base64Image,
+      text: captionText, // <-- Сохраняем текст вместе с картинкой
       read: false,
       timestamp: serverTimestamp()
     });
