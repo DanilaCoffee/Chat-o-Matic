@@ -61,7 +61,7 @@ body {
   gap: 10px;
 }
 
-.logo { width: 40px; height: 40px; }
+.logo { width: 45px; height: 45px; }
 
 h1 {
   font-size: 1.2rem;
@@ -70,18 +70,22 @@ h1 {
   letter-spacing: -0.5px;
 }
 
-#logoutBtn {
+#logoutBtn, #settingsBtn {
   background: transparent;
   border: 1px solid var(--accent);
   color: var(--accent);
-  padding: 5px 15px;
+  padding: 4px 15px 5px 15px;
   border-radius: 20px;
   cursor: pointer;
   font-weight: bold;
   transition: 0.2s;
 }
 
-#logoutBtn:hover {
+#logoutBtn {
+  margin-left: 5px;
+}
+
+#logoutBtn:hover, #settingsBtn:hover {
   background: var(--accent);
   color: #fff;
 }
@@ -234,16 +238,31 @@ input:checked + .slider:before {
 
 /* СООБЩЕНИЯ */
 #messages {
+  scrollbar-width: thin;
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
   display: flex;
+  scrollbar-color: #444 #1a1a1a;
   flex-direction: column;
   gap: 15px;
   background: var(--bg-color);
   /* Паттерн на фоне для красоты */
   background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+#messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+#messages::-webkit-scrollbar-track {
+  background: #1a1a1a;
 }
 
 .message {
@@ -268,12 +287,17 @@ input:checked + .slider:before {
 }
 
 .message .sender {
-  font-size: 0.75rem;
+  color: #FEADFF;
+  font-size: 0.8rem;
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom: 1px;
   display: block;
-  opacity: 0.8;
+  opacity: 0.65;
   pointer-events: none;
+}
+
+.message.my-message .sender {
+  color: #FCF496;
 }
 
 @keyframes popIn {
@@ -332,7 +356,7 @@ input:checked + .slider:before {
 
 /* МОБИЛЬНАЯ АДАПТАЦИЯ */
 @media (max-width: 600px) {
-  .site-header h1 { font-size: 1rem; }
+  .site-header h1 { font-size: 0.9rem; }
   .message { max-width: 85%; }
   .login-box { padding: 20px; }
   
@@ -355,6 +379,26 @@ input:checked + .slider:before {
   /* Оставляем небольшой отступ для имени отправителя */
   .message:has(img) .sender {
     padding: 4px 8px 0 8px;
+  }
+}
+
+@media (max-width: 450px) {
+  .logo-container {
+    gap: 6px;
+  }
+
+  .logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  #logoutBtn, #settingsBtn {
+    padding: 3px 10px 3px 10px;
+    font-size: 12px;
+  }
+
+  #logoutBtn {
+    margin-left: 2px;
   }
 }
 
@@ -384,7 +428,6 @@ input:checked + .slider:before {
 
 /* Немного поправим кнопку прикрепления */
 #attachBtn {
-  font-size: 1.2rem;
   border-radius: 50%;
   width: 45px;
   height: 45px;
@@ -397,6 +440,11 @@ input:checked + .slider:before {
 }
 #attachBtn:hover {
   opacity: 0.8;
+}
+
+#attachBtn svg {
+  width: 28px;
+  height: 28px;
 }
 
 /* Стили для модального окна картинки */
@@ -536,7 +584,6 @@ input:checked + .slider:before {
 
 /* Новые возможности: ответы, ссылки и настройки */
 .chat-tools { margin-left: auto; margin-right: 12px; }
-.settings-btn { border: 1px solid var(--border-color); border-radius: 8px; padding: 7px 10px; background: var(--bg-color); color: var(--text-main); cursor: pointer; }
 .message-text a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .message-text a:hover { opacity: .8; }
 .reply-preview { display: block; max-width: 100%; text-align: left; border: 0; border-left: 3px solid var(--accent); border-radius: 4px; padding: 6px 8px; margin: 3px 0 7px; background: rgba(128,128,128,.12); color: var(--text-main); cursor: pointer; overflow-wrap: anywhere; }
@@ -553,30 +600,35 @@ input:checked + .slider:before {
 .message-actions-wrapper {
   position: absolute;
   top: 4px;
-  right: 5px;
-  z-index: 30;
+  right: 8px;
+  z-index: 1;
 }
 
 .message-more {
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 27px;
-  height: 25px;
+  height: 10px;
   border: 0;
   border-radius: 7px;
-  background: rgba(0, 0, 0, 0.10);
+  background: transparent;
   color: inherit;
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
-  opacity: .7;
+  opacity: 0;
+  transition: opacity 100ms ease;
 }
-.message-more:hover,
-.message-more[aria-expanded="true"] { opacity: 1; background: rgba(0, 0, 0, .18); }
-.my-message .message-more { background: rgba(255, 255, 255, .16); }
-.my-message .message-more:hover,
-.my-message .message-more[aria-expanded="true"] { background: rgba(255, 255, 255, .28); }
+
+.message:hover .message-more {
+  opacity: 0.7;
+}
+
+.message:hover .message-more:hover {
+  opacity: 1;
+}
 
 .message-actions-menu {
   position: absolute;
@@ -584,11 +636,13 @@ input:checked + .slider:before {
   right: 0;
   min-width: 145px;
   padding: 5px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #464646;
   border-radius: 10px;
-  background: var(--panel-bg);
+  background: rgba(0, 0, 0, .7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: var(--text-main);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .22);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -600,14 +654,15 @@ input:checked + .slider:before {
   text-align: left;
   border: 0;
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   background: transparent;
   color: var(--text-main);
-  font-size: .85rem;
+  font-size: .9rem;
   cursor: pointer;
 }
-.message-action:hover { background: var(--bg-color); }
+.message-action:hover { text-shadow: 0 0 2px #fff; }
 .message-action-danger { color: #e53935; }
+.message-action-danger:hover { text-shadow: 0 0 2px #e53935; }
 .message-actions-menu .delete-confirm-box {
   position: static;
   display: flex;
@@ -624,7 +679,20 @@ input:checked + .slider:before {
 }
 .message-actions-menu .delete-confirm-box.hidden { display: none; }
 .message-actions-menu .delete-confirm-box span { flex-basis: 100%; }
-.message-actions-menu .delete-confirm-box button { padding: 4px 8px; }
+.message-actions-menu .delete-confirm-box button {
+  padding: 4px 8px;
+  width: 47%;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #E3E3E3;
+  cursor: pointer;
+}
+.confirm-yes {
+  background-color: #ff80ab;
+}
+.confirm-no {
+  background-color: #ff4081;
+}
 .message > .sender { padding-right: 26px; }
 .edited-label { font-style: italic; }
 

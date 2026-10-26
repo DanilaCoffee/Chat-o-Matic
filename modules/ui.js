@@ -158,6 +158,18 @@ export function displayMessage(name, text, imageBase64, currentUser, isRead, mes
       if (menu.getBoundingClientRect().bottom > messagesContainer.getBoundingClientRect().bottom) {
         menu.classList.add('open-up');
       }
+      const PADDING = 10;
+      menu.style.transform = '';
+      const rect = menu.getBoundingClientRect();
+      let shift = 0;
+      if (rect.left < PADDING) {
+        shift = PADDING - rect.left;
+      } else if (rect.right > window.innerWidth - PADDING) {
+        shift = (window.innerWidth - PADDING) - rect.right;
+      }
+      if (shift !== 0) {
+        menu.style.transform = `translateX(${shift}px)`;
+      }
     }
     moreButton.setAttribute('aria-expanded', String(shouldOpen));
   });
