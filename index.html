@@ -51,8 +51,11 @@
           <span id="status-indicator">Подключение...</span>
           <span id="friend-status" style="font-size: 0.8rem; font-weight: bold; color: #888;">Проверка статуса...</span>
         </div>
+        <div class="chat-tools">
+          <button id="settingsBtn" class="settings-btn" type="button" title="Настройки">⚙ Настройки</button>
+        </div>
         <div class="theme-switch-wrapper">
-          <span id="themeLabel">Светлая тема</span>
+          <span id="themeLabel">Темная тема</span>
           <label class="theme-switch" for="themeToggleBtn">
             <input type="checkbox" id="themeToggleBtn">
             <span class="slider round"></span>
@@ -61,7 +64,8 @@
       </div>
       
       <div id="messages"></div>
-       <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--accent); padding: 0 20px; font-weight: bold; opacity: 0.8;"></div>
+       <div id="replyingBar" class="replying-bar hidden"><span id="replyingText"></span><button id="cancelReplyBtn" type="button" aria-label="Отменить ответ">✕</button></div>
+      <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--accent); padding: 0 20px; font-weight: bold; opacity: 0.8;"></div>
       
       <div class="input-area">
         <!-- Скрытый инпут для выбора файла -->
@@ -74,7 +78,18 @@
       </div>
     </div>
 
-    <div id="imageModal" class="modal-overlay hidden">
+    <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal-content settings-content">
+      <h3>Настройки чата</h3>
+      <label for="soundVolume">Громкость звука <span id="soundVolumeValue">60%</span></label>
+      <input id="soundVolume" type="range" min="0" max="100" value="60">
+      <label for="timeFormat">Формат времени</label>
+      <select id="timeFormat"><option value="24">24 часа</option><option value="12">12 часов (AM/PM)</option></select>
+      <div class="modal-actions"><button id="closeSettingsBtn" class="btn-primary" type="button">Готово</button></div>
+    </div>
+  </div>
+
+  <div id="imageModal" class="modal-overlay hidden">
     <div class="modal-content">
       <h3>Отправить это изображение?</h3>
       <div class="preview-container">

@@ -1,5 +1,7 @@
 // Загружаем звук
 const notificationSound = new Audio('./assets/pop.mp3');
+notificationSound.volume = Number(localStorage.getItem('chat_sound_volume') ?? 60) / 100;
+export function setNotificationVolume(value) { notificationSound.volume = Math.max(0, Math.min(1, Number(value) / 100)); localStorage.setItem('chat_sound_volume', String(value)); }
 let originalTitle = document.title;
 
 // Функция запроса разрешения (вызывается при входе в чат)

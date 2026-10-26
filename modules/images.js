@@ -34,7 +34,7 @@ function compressImage(file, maxWidth = 800, quality = 0.6) {
 }
 
 // Обновленная функция отправки
-export async function sendImage(file, captionText = "") {
+export async function sendImage(file, captionText = "", replyTo = null) {
   const currentUser = localStorage.getItem('chat_user_name');
   if (!file || !currentUser) return;
 
@@ -47,13 +47,15 @@ export async function sendImage(file, captionText = "") {
     
     statusIndicator.textContent = "Отправляем...";
     
-    await push(messagesRef, {
+    const payload = {
       name: currentUser,
       image: base64Image,
-      text: captionText, // <-- Сохраняем текст вместе с картинкой
+      text: captionText,
       read: false,
       timestamp: serverTimestamp()
-    });
+    };
+    if (replyTo) payload.replyTo = replyTo;
+    await push(messagesRef, payload);
     
     statusIndicator.textContent = "Подключено";
     statusIndicator.classList.add('connected');

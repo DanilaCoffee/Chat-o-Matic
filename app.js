@@ -7,7 +7,8 @@ import { remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-datab
 import { showImageModal } from './modules/modal.js';
 import { startTyping, stopTyping, listenTypingStatus, markAsRead } from './modules/status.js';
 import { initImageViewer } from './modules/viewer.js';
-import { requestNotificationPermission } from './modules/notifications.js';
+import { requestNotificationPermission, setNotificationVolume } from './modules/notifications.js';
+import { refreshMessageTimes } from './modules/ui.js';
 import { initPresence, removePresence } from './modules/presence.js';
 
 // Элементы интерфейса
@@ -58,23 +59,37 @@ function showLogin() {
   document.getElementById('messages').innerHTML = '';
 }
 
-messageInput.addEventListener('input', () => {
-  startTyping();
-});
-
-// Останавливаем печать при отправке
-sendBtn.addEventListener('click', () => {
-  stopTyping(); // <-- Добавьте это
-  sendTextMessage(messageInput.value);
+let replyTarget = null;
+messageInput.addEventListener('input', () => startTyping());
+function sendCurrentMessage() {
+  const text = messageInput.value.trim();
+  if (!text) return;
+  stopTyping();
+  sendTextMessage(text, replyTarget);
   messageInput.value = '';
+  clearReply();
+}
+function clearReply() {
+  replyTarget = null;
+  document.getElementById('replyingBar').classList.add('hidden');
+  document.getElementById('replyingText').textContent = '';
+}
+document.addEventListener('chat:reply', (event) => {
+  replyTarget = event.detail;
+  document.getElementById('replyingText').textContent = `Ответ на ${replyTarget.name}: ${(replyTarget.text || (replyTarget.image ? '📷 Изображение' : '')).slice(0, 100)}`;
+  document.getElementById('replyingBar').classList.remove('hidden');
+  messageInput.focus();
 });
-
-messageInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    stopTyping(); // <-- Добавьте это
-    sendTextMessage(messageInput.value);
-    messageInput.value = '';
-  }
+document.getElementById('cancelReplyBtn').addEventListener('click', clearReply);
+sendBtn.addEventListener('click', sendCurrentMessage);
+messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendCurrentMessage(); } });
+// Если пользователь начинает печатать вне поля, переводим фокус в текстбокс.
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return;
+  if (document.getElementById('chatScreen').classList.contains('hidden')) return;
+  const active = document.activeElement;
+  if (active === messageInput || active?.matches('input, textarea, select, button, [contenteditable="true"]')) return;
+  messageInput.focus();
 });
 
 // Навешиваем события
@@ -94,18 +109,6 @@ logoutBtn.addEventListener('click', () => {
 });
 
 themeToggleBtn.addEventListener('change', toggleTheme);
-
-sendBtn.addEventListener('click', () => {
-  sendTextMessage(messageInput.value);
-  messageInput.value = '';
-});
-
-messageInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    sendTextMessage(messageInput.value);
-    messageInput.value = '';
-  }
-});
 
 // Очистка базы (как было)
 window.clearChat = async function() {
@@ -135,7 +138,8 @@ fileInput.addEventListener('change', (e) => {
     // Открываем модальное окно и передаем туда текст
     showImageModal(file, (confirmedFile, caption) => {
       // Если пользователь подтвердил, отправляем картинку с подписью
-      sendImage(confirmedFile, caption);
+      sendImage(confirmedFile, caption, replyTarget);
+      clearReply();
       
       // Очищаем основное поле ввода, так как текст уже ушел с картинкой
       messageInput.value = '';
@@ -165,7 +169,8 @@ document.addEventListener('paste', (event) => {
         const existingText = messageInput.value.trim(); // <-- Берем текст
         
         showImageModal(file, (confirmedFile, caption) => {
-          sendImage(confirmedFile, caption);
+          sendImage(confirmedFile, caption, replyTarget);
+      clearReply();
           messageInput.value = ''; // <-- Очищаем
         });
         
@@ -179,6 +184,21 @@ document.addEventListener('paste', (event) => {
     }
   }
 });
+
+// Настройки звука и времени сохраняются локально в браузере.
+const settingsModal = document.getElementById('settingsModal');
+const soundVolume = document.getElementById('soundVolume');
+const soundVolumeValue = document.getElementById('soundVolumeValue');
+const timeFormat = document.getElementById('timeFormat');
+soundVolume.value = localStorage.getItem('chat_sound_volume') ?? '60';
+soundVolumeValue.textContent = `${soundVolume.value}%`;
+timeFormat.value = localStorage.getItem('chat_time_format') ?? '24';
+setNotificationVolume(soundVolume.value);
+document.getElementById('settingsBtn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
+document.getElementById('closeSettingsBtn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.classList.add('hidden'); });
+soundVolume.addEventListener('input', () => { soundVolumeValue.textContent = `${soundVolume.value}%`; setNotificationVolume(soundVolume.value); });
+timeFormat.addEventListener('change', () => { localStorage.setItem('chat_time_format', timeFormat.value); document.querySelectorAll('.msg-time').forEach(el => { if (el.dataset.timestamp) el.textContent = new Date(Number(el.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: timeFormat.value === '12' }); }); });
 
 // Запуск
 initTheme();
