@@ -1,38 +1,46 @@
 import { db } from './firebase.js';
 import { ref, set, onValue, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-// Генерируем уникальный ID для этой вкладки/сессии
-const mySessionId = Math.random().toString(36).substring(2, 10);
+// Отдельная запись для этой вкладки/сессии.
+const mySessionId = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2))
+  .replace(/[^a-zA-Z0-9_-]/g, '');
 const onlineUsersRef = ref(db, 'online_users');
 const myPresenceRef = ref(db, `online_users/${mySessionId}`);
+let unsubscribeOnlineUsers = null;
 
-export function initPresence() {
-  // Записываем себя как онлайн
-  set(myPresenceRef, { joinedAt: Date.now() });
+export async function initPresence() {
+  const userName = localStorage.getItem('chat_user_name');
+  if (!userName || unsubscribeOnlineUsers) return;
 
-  // Если соединение оборвется (закрыли вкладку, пропал интернет), Firebase удалит нас
-  onDisconnect(myPresenceRef).remove();
+  try {
+    // Регистрируем серверную очистку до публикации присутствия.
+    await onDisconnect(myPresenceRef).remove();
+    await set(myPresenceRef, { user: userName, joinedAt: Date.now() });
 
-  // Слушаем изменения в списке онлайн-пользователей
-  onValue(onlineUsersRef, (snapshot) => {
-    const users = snapshot.val();
-    const onlineCount = users ? Object.keys(users).length : 0;
-    
-    const statusEl = document.getElementById('friend-status');
-    if (!statusEl) return;
+    unsubscribeOnlineUsers = onValue(onlineUsersRef, snapshot => {
+      const users = snapshot.val() || {};
+      const friendOnline = Object.values(users).some(session =>
+        session && session.user && session.user !== userName
+      );
+      const statusEl = document.getElementById('friend-status');
+      if (!statusEl) return;
 
-    // Если онлайн больше 1 человека (вы + друг) 
-    if (onlineCount > 1) {
-      statusEl.textContent = "Собеседник онлайн";
-      statusEl.style.color = "#4caf50"; // Зеленый
-    } else {
-      statusEl.textContent = "Собеседник оффлайн";
-      statusEl.style.color = "#888888"; // Серый
-    }
-  });
+      statusEl.textContent = friendOnline ? 'Собеседник онлайн' : 'Собеседник оффлайн';
+      statusEl.style.color = friendOnline ? '#4caf50' : '#888888';
+    }, error => {
+      console.error('Не удалось получить статус собеседника:', error);
+    });
+  } catch (error) {
+    console.error('Не удалось обновить статус присутствия:', error);
+  }
 }
 
-// Функция для выхода (вызывать при нажатии "Выйти")
 export function removePresence() {
-  remove(myPresenceRef);
+  if (unsubscribeOnlineUsers) {
+    unsubscribeOnlineUsers();
+    unsubscribeOnlineUsers = null;
+  }
+  remove(myPresenceRef).catch(error => {
+    console.error('Не удалось очистить статус присутствия:', error);
+  });
 }

@@ -609,8 +609,8 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 27px;
-  height: 10px;
+  width: 30px;
+  height: 24px;
   border: 0;
   border-radius: 7px;
   background: transparent;
@@ -636,13 +636,13 @@ input:checked + .slider:before {
   right: 0;
   min-width: 145px;
   padding: 5px;
-  border: 1px solid #464646;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: rgba(0, 0, 0, .7);
+  background: var(--panel-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--text-main);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -708,3 +708,7 @@ input:checked + .slider:before {
 }
 .chat-tools { margin-right: 0; }
 .input-area button:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Действия сообщения доступны также на сенсорных экранах и с клавиатуры. */
+.message-more:focus-visible { opacity: 1; outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: none) { .message-more { opacity: .75; } }

@@ -8,7 +8,6 @@ function compressImage(file, maxWidth = 800, quality = 0.6) {
     reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let width = img.width;
@@ -22,12 +21,19 @@ function compressImage(file, maxWidth = 800, quality = 0.6) {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(dataUrl);
+        if (!ctx) {
+          reject(new Error('Не удалось создать canvas-контекст для сжатия изображения.'));
+          return;
+        }
+        try {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (error) {
+          reject(error);
+        }
       };
       img.onerror = (error) => reject(error);
+      img.src = event.target.result;
     };
     reader.onerror = (error) => reject(error);
   });
@@ -36,7 +42,7 @@ function compressImage(file, maxWidth = 800, quality = 0.6) {
 // Обновленная функция отправки
 export async function sendImage(file, captionText = "", replyTo = null) {
   const currentUser = localStorage.getItem('chat_user_name');
-  if (!file || !currentUser) return;
+  if (!file || !currentUser) return false;
 
   const statusIndicator = document.getElementById('status-indicator');
   const originalText = statusIndicator.textContent;
@@ -59,9 +65,11 @@ export async function sendImage(file, captionText = "", replyTo = null) {
     
     statusIndicator.textContent = "Подключено";
     statusIndicator.classList.add('connected');
+    return true;
   } catch (error) {
     console.error("Ошибка отправки картинки:", error);
     statusIndicator.textContent = originalText;
-    alert("Не удалось отправить картинку. Возможно, она слишком большая.");
+    alert("Не удалось отправить картинку. Возможно, она слишком большая или соединение с Firebase недоступно.");
+    return false;
   }
 }

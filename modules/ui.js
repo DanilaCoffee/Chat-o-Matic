@@ -203,12 +203,32 @@ export function displayMessage(name, text, imageBase64, currentUser, isRead, mes
     quote.type = 'button';
     quote.className = 'reply-preview';
     quote.textContent = `↪ Ответ на ${replyTo.name || 'сообщение'}: ${(replyTo.text || (replyTo.image ? '📷 Изображение' : '')).slice(0, 100)}`;
-    quote.addEventListener('click', () => {
-      const target = findMessage(replyTo.id);
+    quote.addEventListener('click', async () => {
+      let target = findMessage(replyTo.id);
+
+      // Если оригинал старше загруженной истории, по запросу пользователя
+      // подтягиваем страницы вверх, пока не найдём его или не кончатся данные.
+      if (!target && replyTo.id) {
+        try {
+          const { loadOlderMessages } = await import('./chat.js');
+          while (!target) {
+            const firstBefore = document.querySelector('#messages .message')?.dataset.id || null;
+            const loaded = await loadOlderMessages();
+            target = findMessage(replyTo.id);
+            const firstAfter = document.querySelector('#messages .message')?.dataset.id || null;
+            if (target || !loaded || firstBefore === firstAfter) break;
+          }
+        } catch (error) {
+          console.error('Не удалось перейти к исходному сообщению:', error);
+        }
+      }
+
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.classList.add('message-highlight');
         setTimeout(() => target.classList.remove('message-highlight'), 1200);
+      } else {
+        console.info('Исходное сообщение больше недоступно или не удалось загрузить историю.');
       }
     });
     messageEl.appendChild(quote);

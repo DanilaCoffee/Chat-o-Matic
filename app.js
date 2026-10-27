@@ -5,7 +5,7 @@ import { sendImage } from './modules/images.js';
 import { messagesRef } from './modules/firebase.js';
 import { remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { showImageModal } from './modules/modal.js';
-import { startTyping, stopTyping, listenTypingStatus, markAsRead } from './modules/status.js';
+import { startTyping, stopTyping, listenTypingStatus } from './modules/status.js';
 import { initImageViewer } from './modules/viewer.js';
 import { requestNotificationPermission, setNotificationVolume } from './modules/notifications.js';
 import { refreshMessageTimes } from './modules/ui.js';
@@ -63,31 +63,44 @@ function showLogin() {
 
 let replyTarget = null;
 let editingTarget = null;
+let draftBeforeEdit = null;
 messageInput.addEventListener('input', () => { if (!editingTarget) startTyping(); });
 
 async function sendCurrentMessage() {
   const text = messageInput.value.trim();
   if (editingTarget) {
     if (!text && !editingTarget.image) return;
-    const saved = await updateTextMessage(editingTarget.id, text);
-    if (saved) {
-      messageInput.value = '';
-      clearEdit();
+    const targetId = editingTarget.id;
+    const saved = await updateTextMessage(targetId, text);
+    if (saved && editingTarget?.id === targetId) {
+      // Если пользователь успел начать новый текст во время запроса, сохраняем его как черновик.
+      const pendingDraft = messageInput.value.trim() === text ? '' : messageInput.value;
+      clearEdit({ clearInput: false });
+      messageInput.value = pendingDraft;
     }
     return;
   }
   if (!text) return;
-  stopTyping();
-  sendTextMessage(text, replyTarget);
-  messageInput.value = '';
-  clearReply();
+
+  const submittedReply = replyTarget;
+  const sent = await sendTextMessage(text, submittedReply);
+  if (!sent) return; // Не теряем черновик при сетевой ошибке.
+
+  // Не стираем новый текст, который пользователь мог начать на время отправки.
+  if (messageInput.value.trim() === text) {
+    messageInput.value = '';
+    stopTyping();
+  }
+  if (replyTarget === submittedReply) clearReply();
 }
 
-function clearEdit() {
+function clearEdit({ clearInput = true, restoreDraft = false } = {}) {
   editingTarget = null;
   document.getElementById('editingBar').classList.add('hidden');
   document.getElementById('editingText').textContent = 'Редактирование сообщения';
-  messageInput.value = '';
+  if (restoreDraft && draftBeforeEdit !== null) messageInput.value = draftBeforeEdit;
+  else if (clearInput) messageInput.value = '';
+  draftBeforeEdit = null;
   messageInput.placeholder = 'Напиши что-нибудь...';
   sendBtn.textContent = '➤';
   const attachButton = document.getElementById('attachBtn');
@@ -100,7 +113,11 @@ function clearReply() {
   document.getElementById('replyingText').textContent = '';
 }
 document.addEventListener('chat:reply', (event) => {
-  clearEdit();
+  // Переключение на ответ не должно уничтожать набранный черновик.
+  const draft = editingTarget ? draftBeforeEdit : messageInput.value;
+  if (editingTarget) clearEdit({ clearInput: false, restoreDraft: true });
+  else clearEdit({ clearInput: false });
+  if (draft !== null) messageInput.value = draft;
   replyTarget = event.detail;
   document.getElementById('replyingText').textContent = `Ответ на ${replyTarget.name}: ${(replyTarget.text || (replyTarget.image ? '📷 Изображение' : '')).slice(0, 100)}`;
   document.getElementById('replyingBar').classList.remove('hidden');
@@ -108,6 +125,9 @@ document.addEventListener('chat:reply', (event) => {
 });
 document.getElementById('cancelReplyBtn').addEventListener('click', clearReply);
 document.addEventListener('chat:edit', (event) => {
+  const draft = editingTarget ? draftBeforeEdit : messageInput.value;
+  if (editingTarget) clearEdit({ clearInput: false, restoreDraft: true });
+  draftBeforeEdit = draft ?? '';
   clearReply();
   const target = event.detail;
   editingTarget = target;
@@ -119,7 +139,7 @@ document.addEventListener('chat:edit', (event) => {
   document.getElementById('attachBtn').disabled = true;
   messageInput.focus();
 });
-document.getElementById('cancelEditBtn').addEventListener('click', clearEdit);
+document.getElementById('cancelEditBtn').addEventListener('click', () => clearEdit({ clearInput: false, restoreDraft: true }));
 sendBtn.addEventListener('click', sendCurrentMessage);
 messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendCurrentMessage(); } });
 // Если пользователь начинает печатать вне поля, переводим фокус в текстбокс.
@@ -175,13 +195,15 @@ fileInput.addEventListener('change', (e) => {
     const existingText = messageInput.value.trim();
     
     // Открываем модальное окно и передаем туда текст
-    showImageModal(file, (confirmedFile, caption) => {
-      // Если пользователь подтвердил, отправляем картинку с подписью
-      sendImage(confirmedFile, caption, replyTarget);
-      clearReply();
-      
-      // Очищаем основное поле ввода, так как текст уже ушел с картинкой
-      messageInput.value = '';
+    showImageModal(file, async (confirmedFile, caption) => {
+      const sent = await sendImage(confirmedFile, caption, replyTarget);
+      if (sent) {
+        clearReply();
+        messageInput.value = '';
+      } else {
+        // Возвращаем текст подписи, чтобы его можно было отправить повторно.
+        messageInput.value = caption;
+      }
     });
     
     // Передаем текст в модальное окно ПОСЛЕ его открытия
@@ -196,7 +218,7 @@ fileInput.addEventListener('change', (e) => {
 
 document.addEventListener('paste', (event) => {
   const isChatVisible = !document.getElementById('chatScreen').classList.contains('hidden');
-  if (!isChatVisible) return;
+  if (!isChatVisible || editingTarget) return;
 
   const items = (event.clipboardData || window.clipboardData).items;
   
@@ -207,10 +229,14 @@ document.addEventListener('paste', (event) => {
       if (file) {
         const existingText = messageInput.value.trim(); // <-- Берем текст
         
-        showImageModal(file, (confirmedFile, caption) => {
-          sendImage(confirmedFile, caption, replyTarget);
-      clearReply();
-          messageInput.value = ''; // <-- Очищаем
+        showImageModal(file, async (confirmedFile, caption) => {
+          const sent = await sendImage(confirmedFile, caption, replyTarget);
+          if (sent) {
+            clearReply();
+            messageInput.value = '';
+          } else {
+            messageInput.value = caption;
+          }
         });
         
         // Вставляем текст в модальное окно
@@ -237,11 +263,13 @@ document.getElementById('settingsBtn').addEventListener('click', () => settingsM
 document.getElementById('closeSettingsBtn').addEventListener('click', () => settingsModal.classList.add('hidden'));
 settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.classList.add('hidden'); });
 soundVolume.addEventListener('input', () => { soundVolumeValue.textContent = `${soundVolume.value}%`; setNotificationVolume(soundVolume.value); });
-timeFormat.addEventListener('change', () => { localStorage.setItem('chat_time_format', timeFormat.value); document.querySelectorAll('.msg-time').forEach(el => { if (el.dataset.timestamp) el.textContent = new Date(Number(el.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: timeFormat.value === '12' }); }); });
+timeFormat.addEventListener('change', () => {
+  localStorage.setItem('chat_time_format', timeFormat.value);
+  refreshMessageTimes();
+});
 
 // Запуск
 initTheme();
 initImageViewer();
 initAuth(showChat, showLogin);
 listenTypingStatus();
-markAsRead();

@@ -25,7 +25,7 @@ export function showNotification(senderName, messageText, isImage) {
   }
 
   // 3. Показываем системное уведомление (только если есть разрешение и вкладка не активна)
-  if (Notification.permission === "granted" && document.hidden) {
+  if (typeof Notification !== 'undefined' && Notification.permission === "granted" && document.hidden) {
     const textToShow = isImage ? "📷 Отправил(а) картинку" : messageText;
     
     const notification = new Notification(`Сообщение от ${senderName}`, {

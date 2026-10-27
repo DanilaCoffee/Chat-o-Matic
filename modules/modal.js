@@ -20,6 +20,7 @@ export function showImageModal(file, onConfirm) {
     URL.revokeObjectURL(objectUrl);
     confirmBtn.onclick = null;
     cancelBtn.onclick = null;
+    captionInput.onkeypress = null;
     captionInput.value = ''; // Очищаем поле при закрытии
   };
 
