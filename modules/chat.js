@@ -1,13 +1,18 @@
 import { db, messagesRef } from './firebase.js';
 import {
   push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp,
+<<<<<<< Updated upstream
   query, orderByKey, limitToLast, endAt, get, ref, update
+=======
+  query, orderByKey, limitToLast, endAt, get, ref, update, onValue
+>>>>>>> Stashed changes
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { displayMessage, updateMessageStatus } from './ui.js';
 import { showNotification } from './notifications.js';
 
 const PAGE_SIZE = 20;
 let activeUser = null;
+let sessionGeneration = 0;
 let oldestLoadedKey = null;
 let loadingOlder = false;
 let hasOlder = true;
@@ -70,6 +75,7 @@ function renderChangedSnapshot(snapshot) {
 }
 
 export function listenForMessages(user) {
+  const listenerGeneration = ++sessionGeneration;
   activeUser = user;
   oldestLoadedKey = null;
   hasOlder = true;
@@ -100,7 +106,11 @@ export function listenForMessages(user) {
     const wasLoaded = loadedIds.has(snapshot.key);
     const data = snapshot.val();
     renderSnapshot(snapshot, false);
+<<<<<<< Updated upstream
     if (!wasLoaded && data && data.name !== user) {
+=======
+    if (!wasLoaded && initialHistoryLoaded && data && data.name !== user) {
+>>>>>>> Stashed changes
       showNotification(data.name, data.text || '', !!data.image);
     }
   });
@@ -130,6 +140,7 @@ export function listenForMessages(user) {
     if (messagesDiv.scrollTop < 80) loadOlderMessages();
   };
 
+<<<<<<< Updated upstream
   get(liveQuery).then(snapshot => {
     if (disposed) return;
 
@@ -174,15 +185,98 @@ export function listenForMessages(user) {
     pendingChanged.clear();
     initializing = false;
   });
+=======
+  let initialHistoryLoaded = false;
+  let initialLoadInFlight = false;
+  let lastConnectionState = null;
+  let unsubscribeConnection = null;
+
+  const loadInitialHistory = async () => {
+    if (disposed || initialLoadInFlight || initialHistoryLoaded) return;
+    initialLoadInFlight = true;
+    initializing = true;
+
+    try {
+      const snapshot = await get(liveQuery);
+      if (disposed) return;
+
+      initialIds = new Set();
+      snapshot.forEach(child => {
+        initialIds.add(child.key);
+        if (!removedDuringInit.has(child.key)) renderSnapshot(child, false);
+      });
+
+      // Events arriving after the snapshot was requested are reconciled separately.
+      for (const child of pendingAdded) {
+        if (removedDuringInit.has(child.key)) continue;
+        const wasLoaded = loadedIds.has(child.key);
+        const data = child.val();
+        renderSnapshot(child, false);
+        if (!wasLoaded && !initialIds.has(child.key) && data && data.name !== user) {
+          showNotification(data.name, data.text || '', !!data.image);
+        }
+      }
+      pendingAdded = [];
+
+      for (const changedSnapshot of pendingChanged.values()) {
+        renderChangedSnapshot(changedSnapshot);
+      }
+      pendingChanged.clear();
+      initializing = false;
+      initialHistoryLoaded = true;
+
+      const status = document.getElementById('status-indicator');
+      status.textContent = 'Подключено';
+      status.classList.add('connected');
+      if (initialIds.size < PAGE_SIZE) hasOlder = false;
+    } catch (error) {
+      console.error('Не удалось загрузить последние сообщения:', error);
+      if (disposed) return;
+
+      // Keep the chat usable with live events, but don't treat an uncertain replay
+      // after a connection failure as a batch of new-message notifications.
+      for (const child of pendingAdded) {
+        if (!removedDuringInit.has(child.key)) renderSnapshot(child, false);
+      }
+      pendingAdded = [];
+      for (const changedSnapshot of pendingChanged.values()) renderChangedSnapshot(changedSnapshot);
+      pendingChanged.clear();
+      initializing = false;
+    } finally {
+      initialLoadInFlight = false;
+    }
+  };
+
+  // Retry the bounded initial read after a disconnect/reconnect. Without this,
+  // a failed first read could either spam notifications or suppress them forever.
+  unsubscribeConnection = onValue(ref(db, '.info/connected'), snapshot => {
+    const connected = snapshot.val() === true;
+    if (connected && lastConnectionState === false && !initialHistoryLoaded) {
+      void loadInitialHistory();
+    }
+    lastConnectionState = connected;
+  }, error => console.error('Не удалось отследить подключение Firebase:', error));
+
+  void loadInitialHistory();
+>>>>>>> Stashed changes
 
   return () => {
     disposed = true;
     unsubAdded();
     unsubChanged();
     unsubRemoved();
+    if (unsubscribeConnection) unsubscribeConnection();
     messagesDiv.onscroll = null;
+<<<<<<< Updated upstream
     activeUser = null;
     pendingReadUpdates = {};
+=======
+    if (sessionGeneration === listenerGeneration) {
+      sessionGeneration++;
+      activeUser = null;
+      pendingReadUpdates = {};
+    }
+>>>>>>> Stashed changes
     pendingAdded = [];
     pendingChanged.clear();
   };
@@ -190,14 +284,21 @@ export function listenForMessages(user) {
 
 export async function loadOlderMessages() {
   if (loadingOlder || !hasOlder || !oldestLoadedKey || !activeUser) return false;
+<<<<<<< Updated upstream
+=======
+  const requestGeneration = sessionGeneration;
+  const requestedUser = activeUser;
+  const requestedOldestKey = oldestLoadedKey;
+>>>>>>> Stashed changes
   loadingOlder = true;
   const box = document.getElementById('messages');
   const oldHeight = box.scrollHeight;
   const oldTop = box.scrollTop;
 
   try {
-    const olderQuery = query(messagesRef, orderByKey(), endAt(oldestLoadedKey), limitToLast(PAGE_SIZE + 1));
+    const olderQuery = query(messagesRef, orderByKey(), endAt(requestedOldestKey), limitToLast(PAGE_SIZE + 1));
     const snapshot = await get(olderQuery);
+    if (requestGeneration !== sessionGeneration || activeUser !== requestedUser) return false;
     const rows = [];
     snapshot.forEach(child => {
       if (child.key !== oldestLoadedKey && !loadedIds.has(child.key)) rows.push(child);
@@ -217,7 +318,11 @@ export async function loadOlderMessages() {
     console.error('Не удалось загрузить старые сообщения:', error);
     return false;
   } finally {
+<<<<<<< Updated upstream
     loadingOlder = false;
+=======
+    if (requestGeneration === sessionGeneration) loadingOlder = false;
+>>>>>>> Stashed changes
   }
 }
 

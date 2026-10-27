@@ -1,4 +1,4 @@
-import { initTheme, toggleTheme, displayMessage } from './modules/ui.js';
+import { displayMessage } from './modules/ui.js';
 import { initAuth, loginUser, logoutUser, currentUser } from './modules/auth.js';
 import { listenForMessages, sendTextMessage, updateTextMessage } from './modules/chat.js';
 import { sendImage } from './modules/images.js';
@@ -17,7 +17,6 @@ const chatScreen = document.getElementById('chatScreen');
 const nameInput = document.getElementById('nameInput');
 const enterBtn = document.getElementById('enterBtn');
 const logoutBtn = document.getElementById('logoutBtn');
-const themeToggleBtn = document.getElementById('themeToggleBtn');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
@@ -83,11 +82,19 @@ async function sendCurrentMessage() {
   if (!text) return;
 
   const submittedReply = replyTarget;
+<<<<<<< Updated upstream
+=======
+  const submittedInputValue = messageInput.value;
+>>>>>>> Stashed changes
   const sent = await sendTextMessage(text, submittedReply);
   if (!sent) return; // Не теряем черновик при сетевой ошибке.
 
   // Не стираем новый текст, который пользователь мог начать на время отправки.
+<<<<<<< Updated upstream
   if (messageInput.value.trim() === text) {
+=======
+  if (messageInput.value === submittedInputValue) {
+>>>>>>> Stashed changes
     messageInput.value = '';
     stopTyping();
   }
@@ -167,7 +174,6 @@ logoutBtn.addEventListener('click', () => {
   showLogin();
 });
 
-themeToggleBtn.addEventListener('change', toggleTheme);
 
 // Очистка базы (как было)
 window.clearChat = async function() {
@@ -199,7 +205,11 @@ fileInput.addEventListener('change', (e) => {
       const sent = await sendImage(confirmedFile, caption, replyTarget);
       if (sent) {
         clearReply();
+<<<<<<< Updated upstream
         messageInput.value = '';
+=======
+        if (messageInput.value.trim() === existingText) messageInput.value = '';
+>>>>>>> Stashed changes
       } else {
         // Возвращаем текст подписи, чтобы его можно было отправить повторно.
         messageInput.value = caption;
@@ -233,7 +243,11 @@ document.addEventListener('paste', (event) => {
           const sent = await sendImage(confirmedFile, caption, replyTarget);
           if (sent) {
             clearReply();
+<<<<<<< Updated upstream
             messageInput.value = '';
+=======
+            if (messageInput.value.trim() === existingText) messageInput.value = '';
+>>>>>>> Stashed changes
           } else {
             messageInput.value = caption;
           }
@@ -269,7 +283,6 @@ timeFormat.addEventListener('change', () => {
 });
 
 // Запуск
-initTheme();
 initImageViewer();
 initAuth(showChat, showLogin);
 listenTypingStatus();

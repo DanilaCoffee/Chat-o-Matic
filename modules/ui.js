@@ -1,19 +1,3 @@
-export function initTheme() {
-  const savedTheme = localStorage.getItem('chat_theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  const toggle = document.getElementById('themeToggleBtn');
-  if (toggle) toggle.checked = savedTheme === 'dark';
-}
-
-export function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('chat_theme', newTheme);
-  const toggle = document.getElementById('themeToggleBtn');
-  if (toggle) toggle.checked = newTheme === 'dark';
-}
-
 function appendTextWithLinks(container, text) {
   const urlPattern = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
   let last = 0;

@@ -5,10 +5,15 @@ import { currentUser } from './auth.js';
 let friendTypingInterval = null;
 let typingTimeout = null;
 const typingRootRef = ref(db, 'typing_status');
+<<<<<<< Updated upstream
+=======
+const connectionRef = ref(db, '.info/connected');
+>>>>>>> Stashed changes
 const sessionId = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2))
   .replace(/[^a-zA-Z0-9_-]/g, '');
 const ownTypingRef = ref(db, `typing_status/${sessionId}`);
 let disconnectCleanupRegistered = false;
+<<<<<<< Updated upstream
 
 // У каждого открытого клиента собственная запись: один пользователь больше
 // не может случайно стереть индикатор набора другого пользователя.
@@ -26,6 +31,52 @@ export function startTyping() {
   set(ownTypingRef, { user: currentUser, timestamp: Date.now() }).catch(error => {
     console.error('Не удалось обновить статус набора:', error);
   });
+=======
+let lastConnectionState = null;
+let unsubscribeTypingStatus = null;
+
+function registerDisconnectCleanup() {
+  if (disconnectCleanupRegistered) return;
+  disconnectCleanupRegistered = true;
+  onDisconnect(ownTypingRef).remove().catch(error => {
+    console.error('Не удалось настроить очистку статуса набора:', error);
+    disconnectCleanupRegistered = false;
+  });
+}
+
+function writeTypingStatus() {
+  if (!currentUser) return;
+  set(ownTypingRef, { user: currentUser, timestamp: Date.now() }).catch(error => {
+    console.error('Не удалось обновить статус набора:', error);
+  });
+}
+
+// onDisconnect must be registered again after an RTDB connection is restored.
+onValueConnection();
+function onValueConnection() {
+  onValue(connectionRef, snapshot => {
+    const connected = snapshot.val() === true;
+    if (!connected) {
+      disconnectCleanupRegistered = false;
+    } else if (lastConnectionState !== true) {
+      disconnectCleanupRegistered = false;
+      if (typingTimeout !== null && currentUser) {
+        registerDisconnectCleanup();
+        writeTypingStatus();
+      }
+    }
+    lastConnectionState = connected;
+  }, error => console.error('Не удалось проверить подключение Firebase:', error));
+}
+
+// У каждого открытого клиента собственная запись, чтобы клиенты не стирали
+// статус набора друг друга. Читаем и старый плоский формат для совместимости.
+export function startTyping() {
+  if (!currentUser) return;
+
+  registerDisconnectCleanup();
+  writeTypingStatus();
+>>>>>>> Stashed changes
 
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(stopTyping, 2000);
@@ -40,6 +91,7 @@ export function stopTyping() {
 }
 
 export function listenTypingStatus() {
+<<<<<<< Updated upstream
   onValue(typingRootRef, snapshot => {
     const data = snapshot.val();
     const now = Date.now();
@@ -47,6 +99,24 @@ export function listenTypingStatus() {
       item && item.user && item.user !== currentUser &&
       Number.isFinite(Number(item.timestamp)) && now - Number(item.timestamp) < 5000
     );
+=======
+  if (unsubscribeTypingStatus) return unsubscribeTypingStatus;
+
+  unsubscribeTypingStatus = onValue(typingRootRef, snapshot => {
+    const data = snapshot.val();
+    const now = Date.now();
+    const isRecent = timestamp => Number.isFinite(Number(timestamp)) && now - Number(timestamp) < 5000;
+
+    // Legacy clients stored { user, timestamp } directly at /typing_status.
+    const legacyTyping = data && typeof data.user === 'string' &&
+      data.user !== currentUser && isRecent(data.timestamp);
+    const sessionTyping = data && Object.values(data).some(item =>
+      item && typeof item === 'object' && item.user && item.user !== currentUser &&
+      isRecent(item.timestamp)
+    );
+    const anotherUserTyping = Boolean(legacyTyping || sessionTyping);
+
+>>>>>>> Stashed changes
     const indicator = document.getElementById('typing-indicator');
     if (!indicator) return;
 
@@ -66,4 +136,9 @@ export function listenTypingStatus() {
   }, error => {
     console.error('Не удалось получить статус набора:', error);
   });
+<<<<<<< Updated upstream
+=======
+
+  return unsubscribeTypingStatus;
+>>>>>>> Stashed changes
 }
