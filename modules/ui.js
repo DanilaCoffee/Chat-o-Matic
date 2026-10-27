@@ -278,7 +278,11 @@ export function displayMessage(name, text, imageBase64, currentUser, isRead, mes
 
   if (imgElement) {
     imgElement.onload = () => {
-      const width = imgElement.offsetWidth;
+      let width = imgElement.offsetWidth;
+      if (width < 250) {
+        width = 250;
+        imgElement.style.margin = 'auto';
+      }
       if (textSpan) textSpan.style.maxWidth = width + 'px';
       metaDiv.style.maxWidth = width + 'px';
       metaDiv.style.width = width + 'px';

@@ -4,11 +4,14 @@ export function showImageModal(file, onConfirm) {
   const previewImg = document.getElementById('previewImage');
   const confirmBtn = document.getElementById('confirmImageBtn');
   const cancelBtn = document.getElementById('cancelImageBtn');
-  const captionInput = document.getElementById('imageCaptionInput'); // Новое поле
+  const captionInput = document.getElementById('imageCaptionInput');
+  const keepQualityCheckbox = document.getElementById('keepQualityCheckbox');
 
   // Создаем временную ссылку для предпросмотра
   const objectUrl = URL.createObjectURL(file);
   previewImg.src = objectUrl;
+
+  keepQualityCheckbox.checked = false;
 
   // Показываем окно и фокусируемся на поле ввода текста
   modal.classList.remove('hidden');
@@ -27,8 +30,9 @@ export function showImageModal(file, onConfirm) {
   // Обработчик кнопки "Отправить"
   const handleConfirm = () => {
     const caption = captionInput.value.trim();
+    const keepOriginal = keepQualityCheckbox.checked;
     cleanup();
-    onConfirm(file, caption); // Передаем и файл, и текст
+    onConfirm(file, caption, keepOriginal); // Передаем и файл, и текст
   };
 
   confirmBtn.onclick = handleConfirm;

@@ -37,6 +37,8 @@
   <!-- Основной контент -->
   <main class="main-content">
     
+    <canvas style="position:absolute; width: 0px; height: 0px; inset:0; z-index:-1; pointer-events: none"></canvas>
+    
     <!-- Экран входа -->
     <div id="loginScreen" class="screen">
       <div class="login-box">
@@ -59,9 +61,9 @@
       <div id="messages"></div>
        <div id="replyingBar" class="replying-bar hidden"><span id="replyingText"></span><button id="cancelReplyBtn" type="button" aria-label="Отменить ответ">✕</button></div>
        <div id="editingBar" class="replying-bar editing-bar hidden"><span id="editingText">Редактирование сообщения</span><button id="cancelEditBtn" type="button" aria-label="Отменить редактирование">✕</button></div>
-      <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--accent); padding: 0 20px; font-weight: bold; opacity: 0.8;"></div>
       
-      <div class="input-area">
+      <div class="input-area" style="position: relative;">
+        <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--accent); padding: 0 20px; font-weight: bold; opacity: 0.8; position: absolute; top: -20px"></div>
         <!-- Скрытый инпут для выбора файла -->
         <input type="file" id="fileInput" accept="image/*" style="display: none;">
         <!-- Кнопка для прикрепления -->
@@ -71,8 +73,20 @@
                   stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        
-        <input type="text" id="messageInput" placeholder="Напиши что-нибудь..." autocomplete="off">
+
+        <div class="textarea-wrapper">
+          <textarea id="messageInput" placeholder="Напиши что-нибудь..." rows="1" autocomplete="off"></textarea>
+          
+          <!-- Кнопка смайлика внутри обертки -->
+          <button id="emojiBtn" title="Смайлики">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+          </button>
+        </div>
         <button id="sendBtn">➤</button>
       </div>
     </div>
@@ -94,6 +108,10 @@
       <div class="preview-container">
         <img id="previewImage" src="" alt="Превью">
       </div>
+      <label style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 10px; cursor: pointer; font-size: 0.9rem;">
+        <input type="checkbox" id="keepQualityCheckbox" style="accent-color: #ff80ab;">
+        Отправить без сжатия (оригинал)
+      </label>
       <input type="text" id="imageCaptionInput" placeholder="Добавить подпись..." autocomplete="off" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); outline: none;">
       <div class="modal-actions">
         <button id="cancelImageBtn" class="btn-secondary">Отмена</button>

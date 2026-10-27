@@ -147,6 +147,8 @@ h1 {
 /* ЭКРАН ЧАТА */
 #chatScreen {
   background: var(--bg-color);
+  max-width: 1050px;
+  margin: auto;
 }
 
 .chat-header {
@@ -177,8 +179,11 @@ h1 {
   gap: 15px;
   background: var(--bg-color);
   /* Паттерн на фоне для красоты */
-  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-color: #2b2b2b;
+  background-image:
+  radial-gradient(circle at 20% 25%, rgba(148,0,211,0.14) 0%, transparent 35%),
+  radial-gradient(circle at 80% 30%, rgba(138,43,226,0.10) 0%, transparent 38%),
+  radial-gradient(circle at 50% 85%, rgba(75,0,130,0.18) 0%, transparent 45%);
 }
 
 #messages::-webkit-scrollbar {
@@ -195,10 +200,10 @@ h1 {
 }
 
 .message {
-  background: var(--msg-bg-other);
+  background: #202020;
   padding: 10px 15px;
   border-radius: 15px 15px 15px 0;
-  max-width: 75%; /* Ограничиваем ширину пузыря */
+  max-width: 48%;
   align-self: flex-start;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   animation: popIn 0.3s ease-out;
@@ -236,6 +241,7 @@ h1 {
 
 /* ПОЛЕ ВВОДА */
 .input-area {
+  position: relative;
   display: flex;
   padding: 15px;
   background: var(--panel-bg);
@@ -254,6 +260,46 @@ h1 {
 }
 
 .input-area input:focus { border-color: var(--accent); }
+
+.input-area textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+  flex-grow: 1;
+  padding: 12px 40px 12px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px; /* Скругление как у инпута */
+  background: var(--bg-color);
+  color: var(--text-main);
+  outline: none;
+  font-family: inherit; /* Чтобы шрифт совпадал с сайтом */
+  font-size: 0.85rem; /* Важно для iOS, чтобы не было зума */
+  line-height: 1.4;
+  resize: none; /* Запрещаем пользователю растягивать вручную */
+  max-height: 120px; /* Примерно 5 строк */
+  overflow-y: hidden; /* Скрываем скроллбар, пока он не нужен */
+}
+
+.input-area textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.input-area textarea::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.input-area textarea::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.input-area textarea:focus {
+  border-color: var(--accent);
+}
+
+.message-text {
+  white-space: pre-wrap; /* Сохраняет пробелы и переносы строк */
+  word-break: break-word;
+}
 
 .input-area button {
   width: 45px;
@@ -333,7 +379,7 @@ h1 {
 
 /* Стили для картинок в сообщениях */
 .message img {
-  max-width: 100%;
+  max-width: 500px;
   max-height: 350px;
   width: auto;           
   object-fit: contain;   
@@ -538,8 +584,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 24px;
+  width: 27px;
+  height: 10px;
   border: 0;
   border-radius: 7px;
   background: transparent;
@@ -565,9 +611,9 @@ h1 {
   right: 0;
   min-width: 145px;
   padding: 5px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #4A4A4A;
   border-radius: 10px;
-  background: var(--panel-bg);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--text-main);
@@ -628,3 +674,96 @@ h1 {
 .chat-tools { margin-right: 0; }
 .input-area button:disabled { opacity: .45; cursor: not-allowed; }
 
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="password"],
+  textarea {
+    font-size: 16px !important;
+  }
+
+  #messages {
+    background: var(--bg-color);
+    background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .message {
+    background: #2a2a2a;
+  }
+
+  #typing-indicator {
+    left: 0px;
+  }
+
+  .input-area textarea {
+    max-height: 200px;
+  }
+}
+
+/* Кнопка смайлика */
+#emojiBtn {
+  position: absolute;
+  right: 8px;
+  bottom: 0px; /* Прижимаем к правому нижнему углу */
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px;
+  opacity: 0.7; /* Прозрачность по умолчанию */
+  transition: opacity 0.2s, color 0.2s;
+}
+
+#emojiBtn:hover {
+  opacity: 1; /* Полная непрозрачность при наведении */
+  color: var(--text-main); /* Цвет становится более контрастным */
+}
+
+/* Окошко со смайликами (позиционируем относительно input-area) */
+.emoji-picker {
+  position: absolute;
+  bottom: 70px;
+  right: 20px; 
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 100;
+  animation: popIn 0.2s ease-out;
+}
+
+.emoji-picker.hidden {
+  display: none;
+}
+
+.emoji-picker span {
+  font-size: 1.5rem;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: transform 0.1s, background 0.1s;
+  user-select: none;
+}
+
+.emoji-picker span:hover {
+  background: var(--border-color);
+  transform: scale(1.2);
+}
+
+.textarea-wrapper {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+}
