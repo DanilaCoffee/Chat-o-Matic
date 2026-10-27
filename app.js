@@ -82,19 +82,12 @@ async function sendCurrentMessage() {
   if (!text) return;
 
   const submittedReply = replyTarget;
-<<<<<<< Updated upstream
-=======
   const submittedInputValue = messageInput.value;
->>>>>>> Stashed changes
   const sent = await sendTextMessage(text, submittedReply);
   if (!sent) return; // Не теряем черновик при сетевой ошибке.
 
   // Не стираем новый текст, который пользователь мог начать на время отправки.
-<<<<<<< Updated upstream
-  if (messageInput.value.trim() === text) {
-=======
   if (messageInput.value === submittedInputValue) {
->>>>>>> Stashed changes
     messageInput.value = '';
     stopTyping();
   }
@@ -205,11 +198,7 @@ fileInput.addEventListener('change', (e) => {
       const sent = await sendImage(confirmedFile, caption, replyTarget);
       if (sent) {
         clearReply();
-<<<<<<< Updated upstream
-        messageInput.value = '';
-=======
         if (messageInput.value.trim() === existingText) messageInput.value = '';
->>>>>>> Stashed changes
       } else {
         // Возвращаем текст подписи, чтобы его можно было отправить повторно.
         messageInput.value = caption;
@@ -243,11 +232,7 @@ document.addEventListener('paste', (event) => {
           const sent = await sendImage(confirmedFile, caption, replyTarget);
           if (sent) {
             clearReply();
-<<<<<<< Updated upstream
-            messageInput.value = '';
-=======
             if (messageInput.value.trim() === existingText) messageInput.value = '';
->>>>>>> Stashed changes
           } else {
             messageInput.value = caption;
           }

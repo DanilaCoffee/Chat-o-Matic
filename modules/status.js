@@ -5,33 +5,11 @@ import { currentUser } from './auth.js';
 let friendTypingInterval = null;
 let typingTimeout = null;
 const typingRootRef = ref(db, 'typing_status');
-<<<<<<< Updated upstream
-=======
 const connectionRef = ref(db, '.info/connected');
->>>>>>> Stashed changes
 const sessionId = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2))
   .replace(/[^a-zA-Z0-9_-]/g, '');
 const ownTypingRef = ref(db, `typing_status/${sessionId}`);
 let disconnectCleanupRegistered = false;
-<<<<<<< Updated upstream
-
-// У каждого открытого клиента собственная запись: один пользователь больше
-// не может случайно стереть индикатор набора другого пользователя.
-export function startTyping() {
-  if (!currentUser) return;
-
-  if (!disconnectCleanupRegistered) {
-    disconnectCleanupRegistered = true;
-    onDisconnect(ownTypingRef).remove().catch(error => {
-      console.error('Не удалось настроить очистку статуса набора:', error);
-      disconnectCleanupRegistered = false;
-    });
-  }
-
-  set(ownTypingRef, { user: currentUser, timestamp: Date.now() }).catch(error => {
-    console.error('Не удалось обновить статус набора:', error);
-  });
-=======
 let lastConnectionState = null;
 let unsubscribeTypingStatus = null;
 
@@ -76,7 +54,6 @@ export function startTyping() {
 
   registerDisconnectCleanup();
   writeTypingStatus();
->>>>>>> Stashed changes
 
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(stopTyping, 2000);
@@ -91,15 +68,6 @@ export function stopTyping() {
 }
 
 export function listenTypingStatus() {
-<<<<<<< Updated upstream
-  onValue(typingRootRef, snapshot => {
-    const data = snapshot.val();
-    const now = Date.now();
-    const anotherUserTyping = data && Object.values(data).some(item =>
-      item && item.user && item.user !== currentUser &&
-      Number.isFinite(Number(item.timestamp)) && now - Number(item.timestamp) < 5000
-    );
-=======
   if (unsubscribeTypingStatus) return unsubscribeTypingStatus;
 
   unsubscribeTypingStatus = onValue(typingRootRef, snapshot => {
@@ -116,7 +84,6 @@ export function listenTypingStatus() {
     );
     const anotherUserTyping = Boolean(legacyTyping || sessionTyping);
 
->>>>>>> Stashed changes
     const indicator = document.getElementById('typing-indicator');
     if (!indicator) return;
 
@@ -136,9 +103,6 @@ export function listenTypingStatus() {
   }, error => {
     console.error('Не удалось получить статус набора:', error);
   });
-<<<<<<< Updated upstream
-=======
 
   return unsubscribeTypingStatus;
->>>>>>> Stashed changes
 }

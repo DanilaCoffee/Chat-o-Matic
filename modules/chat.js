@@ -1,11 +1,7 @@
 import { db, messagesRef } from './firebase.js';
 import {
   push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp,
-<<<<<<< Updated upstream
-  query, orderByKey, limitToLast, endAt, get, ref, update
-=======
   query, orderByKey, limitToLast, endAt, get, ref, update, onValue
->>>>>>> Stashed changes
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { displayMessage, updateMessageStatus } from './ui.js';
 import { showNotification } from './notifications.js';
@@ -106,11 +102,7 @@ export function listenForMessages(user) {
     const wasLoaded = loadedIds.has(snapshot.key);
     const data = snapshot.val();
     renderSnapshot(snapshot, false);
-<<<<<<< Updated upstream
-    if (!wasLoaded && data && data.name !== user) {
-=======
     if (!wasLoaded && initialHistoryLoaded && data && data.name !== user) {
->>>>>>> Stashed changes
       showNotification(data.name, data.text || '', !!data.image);
     }
   });
@@ -140,52 +132,6 @@ export function listenForMessages(user) {
     if (messagesDiv.scrollTop < 80) loadOlderMessages();
   };
 
-<<<<<<< Updated upstream
-  get(liveQuery).then(snapshot => {
-    if (disposed) return;
-
-    snapshot.forEach(child => {
-      initialIds.add(child.key);
-      if (!removedDuringInit.has(child.key)) renderSnapshot(child, false);
-    });
-
-    // Reconcile child-added events that arrived while the initial snapshot loaded.
-    for (const child of pendingAdded) {
-      if (removedDuringInit.has(child.key)) continue;
-      const wasLoaded = loadedIds.has(child.key);
-      const data = child.val();
-      renderSnapshot(child, false);
-      if (!wasLoaded && !initialIds.has(child.key) && data && data.name !== user) {
-        showNotification(data.name, data.text || '', !!data.image);
-      }
-    }
-    pendingAdded = [];
-
-    // Apply changes that landed during initial loading, after their base rows exist.
-    for (const changedSnapshot of pendingChanged.values()) {
-      renderChangedSnapshot(changedSnapshot);
-    }
-    pendingChanged.clear();
-    initializing = false;
-
-    const status = document.getElementById('status-indicator');
-    status.textContent = 'Подключено';
-    status.classList.add('connected');
-    if (initialIds.size < PAGE_SIZE) hasOlder = false;
-  }).catch(error => {
-    console.error('Не удалось загрузить последние сообщения:', error);
-    // If the one-shot read fails, still render whatever the live listener delivered,
-    // but suppress notifications because the initial/live distinction is unknown.
-    if (disposed) return;
-    for (const child of pendingAdded) {
-      if (!removedDuringInit.has(child.key)) renderSnapshot(child, false);
-    }
-    pendingAdded = [];
-    for (const changedSnapshot of pendingChanged.values()) renderChangedSnapshot(changedSnapshot);
-    pendingChanged.clear();
-    initializing = false;
-  });
-=======
   let initialHistoryLoaded = false;
   let initialLoadInFlight = false;
   let lastConnectionState = null;
@@ -258,7 +204,6 @@ export function listenForMessages(user) {
   }, error => console.error('Не удалось отследить подключение Firebase:', error));
 
   void loadInitialHistory();
->>>>>>> Stashed changes
 
   return () => {
     disposed = true;
@@ -267,16 +212,11 @@ export function listenForMessages(user) {
     unsubRemoved();
     if (unsubscribeConnection) unsubscribeConnection();
     messagesDiv.onscroll = null;
-<<<<<<< Updated upstream
-    activeUser = null;
-    pendingReadUpdates = {};
-=======
     if (sessionGeneration === listenerGeneration) {
       sessionGeneration++;
       activeUser = null;
       pendingReadUpdates = {};
     }
->>>>>>> Stashed changes
     pendingAdded = [];
     pendingChanged.clear();
   };
@@ -284,12 +224,9 @@ export function listenForMessages(user) {
 
 export async function loadOlderMessages() {
   if (loadingOlder || !hasOlder || !oldestLoadedKey || !activeUser) return false;
-<<<<<<< Updated upstream
-=======
   const requestGeneration = sessionGeneration;
   const requestedUser = activeUser;
   const requestedOldestKey = oldestLoadedKey;
->>>>>>> Stashed changes
   loadingOlder = true;
   const box = document.getElementById('messages');
   const oldHeight = box.scrollHeight;
@@ -318,11 +255,7 @@ export async function loadOlderMessages() {
     console.error('Не удалось загрузить старые сообщения:', error);
     return false;
   } finally {
-<<<<<<< Updated upstream
-    loadingOlder = false;
-=======
     if (requestGeneration === sessionGeneration) loadingOlder = false;
->>>>>>> Stashed changes
   }
 }
 
