@@ -34,7 +34,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 7px 20px;
   background-color: var(--panel-bg);
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -148,14 +148,20 @@ h1 {
 #chatScreen {
   background: var(--bg-color);
   max-width: 1050px;
+  height: calc(100% - 30px);
   margin: auto;
+  border-radius: 10px;
+  border-left: 6px solid #1e1e1e;
+  border-right: 6px solid #1e1e1e;
+  box-shadow: 0 0 6px rgba(190, 190, 190, 0.2);
+  overflow: hidden;
 }
 
 .chat-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 7px 20px;
   background: var(--panel-bg);
   border-bottom: 1px solid var(--border-color);
 }
@@ -179,11 +185,11 @@ h1 {
   gap: 15px;
   background: var(--bg-color);
   /* Паттерн на фоне для красоты */
-  background-color: #2b2b2b;
-  background-image:
-  radial-gradient(circle at 20% 25%, rgba(148,0,211,0.14) 0%, transparent 35%),
-  radial-gradient(circle at 80% 30%, rgba(138,43,226,0.10) 0%, transparent 38%),
-  radial-gradient(circle at 50% 85%, rgba(75,0,130,0.18) 0%, transparent 45%);
+  background-color: #0f0710;
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(255, 110, 199, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 85% 30%, rgba(196, 0, 82, 0.1) 0%, transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(100, 0, 150, 0.08) 0%, transparent 50%);
 }
 
 #messages::-webkit-scrollbar {
@@ -275,6 +281,7 @@ h1 {
   font-size: 0.85rem; /* Важно для iOS, чтобы не было зума */
   line-height: 1.4;
   resize: none; /* Запрещаем пользователю растягивать вручную */
+  min-height: 45px;
   max-height: 120px; /* Примерно 5 строк */
   overflow-y: hidden; /* Скрываем скроллбар, пока он не нужен */
 }
@@ -319,26 +326,11 @@ h1 {
 
 .input-area button:hover { background: var(--accent-hover); }
 
-/* ПОДВАЛ */
-.site-footer {
-  text-align: center;
-  padding: 10px;
-  background: var(--panel-bg);
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  border-top: 1px solid var(--border-color);
-}
-
 /* МОБИЛЬНАЯ АДАПТАЦИЯ */
 @media (max-width: 600px) {
   .site-header h1 { font-size: 0.9rem; }
   .message { max-width: 85%; }
   .login-box { padding: 20px; }
-  
-  /* 1. Скрываем футер на телефонах */
-  .site-footer {
-    display: none;
-  }
 
   /* 2. Уменьшаем отступы для сообщений с картинками на телефоне */
   .message img {
@@ -349,6 +341,10 @@ h1 {
   /* Находим сообщение, внутри которого есть картинка, и уменьшаем его padding */
   .message:has(img) {
     padding: 4px; /* Минимальный отступ вокруг картинки */
+  }
+
+  .message:has(img) .message-text {
+    padding-left: 10px;
   }
   
   /* Оставляем небольшой отступ для имени отправителя */
@@ -381,7 +377,7 @@ h1 {
 .message img {
   max-width: 500px;
   max-height: 350px;
-  width: auto;           
+  width: 100%;           
   object-fit: contain;   
   border-radius: 8px;
   margin-top: 5px;
@@ -529,6 +525,7 @@ h1 {
 
 /* Стили для времени и статуса под сообщением */
 .message-meta {
+  width: 100%;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -621,6 +618,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  z-index: 100;
 }
 .message-actions-menu.hidden { display: none; }
 .message-actions-menu.open-up { top: auto; bottom: calc(100% + 4px); }
@@ -683,6 +681,14 @@ h1 {
   input[type="password"],
   textarea {
     font-size: 16px !important;
+  }
+
+  #chatScreen {
+    height: 100%;
+    margin: auto;
+    border-radius: 0px;
+    border: none;
+    box-shadow: none;
   }
 
   #messages {
